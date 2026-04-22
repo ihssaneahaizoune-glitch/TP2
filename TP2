@@ -1,0 +1,358 @@
+"""
+RÉGRESSION LINÉAIRE - Prédiction de la consommation de carburant (MPG)
+Auteur: AHAIZOUNE Ihssane 
+Date: 22/04/2026
+"""
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+
+# Configuration
+plt.style.use('seaborn-v0_8-darkgrid')
+sns.set_palette("husl")
+
+print("=" * 60)
+print("RÉGRESSION LINÉAIRE - Prédiction de la consommation (MPG)")
+print("=" * 60)
+
+# 1. CHARGEMENT DES DONNÉES
+print("\n1. Chargement des données...")
+column_names = ['MPG', 'Cylinders', 'Displacement', 'Horsepower', 
+                'Weight', 'Acceleration', 'Model Year', 'Origin']
+
+df = pd.read_csv('auto-mpg.csv', names=column_names, 
+                 na_values="?", comment='\t', sep=" ", skipinitialspace=True)
+
+print(f"   Dimensions : {df.shape}")
+print(f"   Colonnes : {df.columns.tolist()}")
+
+# 2. NETTOYAGE
+print("\n2. Nettoyage des données...")
+print(f"   Valeurs manquantes avant : {df.isnull().sum().sum()}")
+df = df.dropna()
+print(f"   Valeurs manquantes après : {df.isnull().sum().sum()}")
+print(f"   Dimensions après nettoyage : {df.shape}")
+
+# 3. ANALYSE EXPLORATOIRE
+print("\n3. Analyse exploratoire...")
+
+# Matrice de corrélation
+corr = df.corr()
+print("\n   Corrélations avec MPG :")
+for col in corr['MPG'].sort_values(ascending=False).index:
+    if col != 'MPG':
+        print(f"      {col}: {corr.loc['MPG', col]:.3f}")
+
+# Sélection des features (les plus corrélées)
+features = ['Weight', 'Displacement', 'Horsepower']
+target = 'MPG'
+
+X = df[features]
+y = df[target]
+
+print(f"\n   Features sélectionnées : {features}")
+
+# 4. DIVISION DES DONNÉES
+print("\n4. Division des données (70% train / 30% test)...")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+print(f"   Train : {X_train.shape[0]} échantillons")
+print(f"   Test : {X_test.shape[0]} échantillons")
+
+# 5. ENTRAÎNEMENT
+print("\n5. Entraînement du modèle...")
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+print(f"   Intercept : {model.intercept_:.4f}")
+for f, c in zip(features, model.coef_):
+    print(f"   Coefficient {f}: {c:.4f}")
+
+# 6. ÉVALUATION
+print("\n6. Évaluation du modèle...")
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"   R² (Précision) : {r2:.4f} ({r2*100:.2f}%)")
+print(f"   RMSE : {rmse:.2f} MPG")
+print(f"   MAE : {mae:.2f} MPG")
+print(f"   MSE : {mse:.2f}")
+
+# 7. VISUALISATIONS
+print("\n7. Génération des graphiques...")
+
+# Figure 1 : Prédictions vs Réel
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.scatter(y_test, y_pred, alpha=0.6, c='blue', edgecolors='white', linewidth=0.5)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 
+         'r--', lw=2, label='Prédiction parfaite')
+plt.xlabel('Valeurs réelles (MPG)')
+plt.ylabel('Prédictions (MPG)')
+plt.title('Prédictions vs Valeurs réelles')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Figure 2 : Résidus
+plt.subplot(1, 2, 2)
+residuals = y_test - y_pred
+plt.scatter(y_pred, residuals, alpha=0.6, c='purple', edgecolors='white', linewidth=0.5)
+plt.axhline(y=0, color='red', linestyle='--', lw=2)
+plt.xlabel('Prédictions')
+plt.ylabel('Résidus')
+plt.title('Graphique des résidus')
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('regression_lineaire_resultats.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# Figure 3 : Distribution des résidus
+plt.figure(figsize=(8, 5))
+sns.histplot(residuals, bins=20, kde=True, color='green')
+plt.xlabel('Résidus')
+plt.ylabel('Fréquence')
+plt.title('Distribution des résidus')
+plt.axvline(x=0, color='red', linestyle='--')
+plt.savefig('residus_distribution.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# 8. PRÉDICTION EXEMPLE
+print("\n8. Exemple de prédiction...")
+new_car = np.array([[3500, 250, 150]])  # Weight, Displacement, Horsepower
+pred = model.predict(new_car)[0]
+print(f"   Voiture : Poids=3500lbs, Cylindrée=250, Puissance=150ch")
+print(f"   Consommation prédite : {pred:.1f} MPG")
+
+print("\n" + "=" * 60)
+print("RÉGRESSION LINÉAIRE - TERMINÉE AVEC SUCCÈS!")
+"""
+RÉGRESSION LOGISTIQUE - Prédiction d'admission à l'université
+Auteur: [Votre Nom]
+Date: 22/04/2026
+"""
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (accuracy_score, confusion_matrix, 
+                           classification_report, roc_curve, auc)
+
+# Configuration
+plt.style.use('seaborn-v0_8-darkgrid')
+sns.set_palette("husl")
+
+print("=" * 60)
+print("RÉGRESSION LOGISTIQUE - Prédiction d'admission universitaire")
+print("=" * 60)
+
+# 1. CHARGEMENT DES DONNÉES
+print("\n1. Chargement des données...")
+df = pd.read_csv('binary.csv')
+df.columns = ['admit', 'gre', 'gpa', 'prestige']
+
+print(f"   Dimensions : {df.shape}")
+print(f"   Colonnes : {df.columns.tolist()}")
+print(f"\n   Distribution des admissions :")
+print(f"      Non admis (0) : {(df['admit']==0).sum()} ({df['admit'].mean()*100:.1f}%)")
+print(f"      Admis (1) : {(df['admit']==1).sum()} ({(1-df['admit'].mean())*100:.1f}%)")
+
+# 2. STATISTIQUES DESCRIPTIVES
+print("\n2. Statistiques par groupe...")
+print(df.groupby('admit').agg({
+    'gre': ['mean', 'std'],
+    'gpa': ['mean', 'std']
+}).round(2))
+
+# 3. CRÉATION DES VARIABLES DUMMY
+print("\n3. Transformation des variables catégorielles...")
+dummy_ranks = pd.get_dummies(df['prestige'], prefix='prestige')
+df_encoded = pd.concat([df[['admit', 'gre', 'gpa']], dummy_ranks], axis=1)
+print(f"   Nouvelles colonnes : {df_encoded.columns.tolist()}")
+
+# 4. PRÉPARATION DES DONNÉES
+print("\n4. Préparation des données...")
+X = df_encoded.drop('admit', axis=1)
+y = df_encoded['admit']
+
+# Standardisation
+scaler = StandardScaler()
+X_scaled = X.copy()
+X_scaled[['gre', 'gpa']] = scaler.fit_transform(X[['gre', 'gpa']])
+
+print(f"   Features : {X_scaled.shape[1]}")
+print(f"   Échantillons : {X_scaled.shape[0]}")
+
+# 5. DIVISION DES DONNÉES
+print("\n5. Division des données (70% train / 30% test)...")
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.3, random_state=42, stratify=y
+)
+print(f"   Train : {X_train.shape[0]} échantillons")
+print(f"   Test : {X_test.shape[0]} échantillons")
+
+# 6. ENTRAÎNEMENT
+print("\n6. Entraînement du modèle...")
+model = LogisticRegression(C=1.0, random_state=42)
+model.fit(X_train, y_train)
+
+print(f"   Intercept : {model.intercept_[0]:.4f}")
+print("   Coefficients :")
+for feat, coef in zip(X.columns, model.coef_[0]):
+    print(f"      {feat}: {coef:.4f}")
+
+# 7. ÉVALUATION
+print("\n7. Évaluation du modèle...")
+y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)[:, 1]
+
+# Matrice de confusion
+cm = confusion_matrix(y_test, y_pred)
+tn, fp, fn, tp = cm.ravel()
+
+accuracy = accuracy_score(y_test, y_pred)
+precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+print(f"\n   Métriques :")
+print(f"      Accuracy : {accuracy:.4f} ({accuracy*100:.2f}%)")
+print(f"      Precision : {precision:.4f}")
+print(f"      Recall/Sensibilité : {recall:.4f}")
+print(f"      Spécificité : {specificity:.4f}")
+print(f"      F1-Score : {f1:.4f}")
+
+print(f"\n   Matrice de confusion :")
+print(f"      Vrais Positifs (TP) : {tp}")
+print(f"      Vrais Négatifs (TN) : {tn}")
+print(f"      Faux Positifs (FP) : {fp}")
+print(f"      Faux Négatifs (FN) : {fn}")
+
+# 8. COURBE ROC
+print("\n8. Calcul de la courbe ROC...")
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+roc_auc = auc(fpr, tpr)
+
+print(f"   AUC : {roc_auc:.4f}")
+print("   Interprétation : ", end="")
+if roc_auc >= 0.9:
+    print("Excellent")
+elif roc_auc >= 0.8:
+    print("Très bon")
+elif roc_auc >= 0.7:
+    print("Bon")
+else:
+    print("Acceptable")
+
+# 9. VISUALISATIONS
+print("\n9. Génération des graphiques...")
+
+# Figure 1 : Matrice de confusion
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Non admis', 'Admis'],
+            yticklabels=['Non admis', 'Admis'])
+plt.title('Matrice de confusion')
+plt.xlabel('Prédiction')
+plt.ylabel('Vérité terrain')
+
+# Figure 2 : Courbe ROC
+plt.subplot(1, 2, 2)
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC (AUC = {roc_auc:.3f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Aléatoire')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('Taux de faux positifs')
+plt.ylabel('Taux de vrais positifs')
+plt.title('Courbe ROC')
+plt.legend(loc="lower right")
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('regression_logistique_resultats.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# Figure 3 : Distribution des probabilités
+plt.figure(figsize=(8, 5))
+plt.hist(y_pred_proba[y_test==0], bins=20, alpha=0.7, label='Non admis', color='red')
+plt.hist(y_pred_proba[y_test==1], bins=20, alpha=0.7, label='Admis', color='green')
+plt.xlabel('Probabilité d\'admission')
+plt.ylabel('Fréquence')
+plt.title('Distribution des probabilités prédites')
+plt.legend()
+plt.savefig('probabilites_distribution.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# 10. OPTIMISATION DU SEUIL
+print("\n10. Optimisation du seuil de décision...")
+best_threshold = 0.5
+best_accuracy = accuracy
+
+for threshold in np.arange(0.3, 0.8, 0.05):
+    y_pred_opt = (y_pred_proba >= threshold).astype(int)
+    acc_opt = accuracy_score(y_test, y_pred_opt)
+    if acc_opt > best_accuracy:
+        best_accuracy = acc_opt
+        best_threshold = threshold
+
+print(f"   Seuil optimal : {best_threshold:.2f}")
+print(f"   Accuracy optimisée : {best_accuracy:.4f} ({best_accuracy*100:.2f}%)")
+
+# 11. PRÉDICTION POUR UN NOUVEL ÉTUDIANT
+print("\n11. Exemple de prédiction...")
+
+def predict_admission(gre, gpa, prestige):
+    features = np.zeros(6)
+    features[0] = gre
+    features[1] = gpa
+    
+    if prestige == 1:
+        features[2] = 1
+    elif prestige == 2:
+        features[3] = 1
+    elif prestige == 3:
+        features[4] = 1
+    elif prestige == 4:
+        features[5] = 1
+    
+    features[0:2] = scaler.transform([features[0:2]])[0]
+    proba = model.predict_proba([features])[0][1]
+    pred = 1 if proba >= best_threshold else 0
+    
+    return proba, pred
+
+# Test avec différents profils
+test_profiles = [
+    (320, 3.8, 1, "Excellent étudiant, meilleur prestige"),
+    (300, 3.5, 2, "Bon étudiant, bon prestige"),
+    (280, 3.0, 3, "Étudiant moyen, prestige moyen"),
+    (260, 2.7, 4, "Étudiant faible, faible prestige"),
+]
+
+for gre, gpa, prestige, desc in test_profiles:
+    proba, pred = predict_admission(gre, gpa, prestige)
+    status = "ADMIS" if pred == 1 else "NON ADMIS"
+    print(f"\n   {desc}:")
+    print(f"      GRE={gre}, GPA={gpa}, Prestige={prestige}")
+    print(f"      → Probabilité: {proba*100:.1f}% - {status}")
+
+print("\n" + "=" * 60)
+print("RÉGRESSION LOGISTIQUE - TERMINÉE AVEC SUCCÈS!")
+print("=" * 60)
+print("=" * 60)
