@@ -1,7 +1,7 @@
 """
 RÉGRESSION LINÉAIRE - Prédiction de la consommation de carburant (MPG)
 Auteur: AHAIZOUNE Ihssane 
-Date: 22/04/2026
+Date: 29/04/2026
 """
 
 import numpy as np
